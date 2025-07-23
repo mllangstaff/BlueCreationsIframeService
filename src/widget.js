@@ -29,14 +29,14 @@
       backdropFilter: 'blur(10px)'
     };
     
-    // Size configurations - enhanced for dialogue content
+    // Size configurations - enhanced for dialogue content with combined HTML and text
     const sizeConfig = {
       small: { width: '280px', height: '180px', fontSize: '12px' },
       medium: { width: '350px', height: '250px', fontSize: '14px' },
       large: { width: '450px', height: '320px', fontSize: '16px' },
-      // Special dialogue sizes
-      dialogue: { width: '400px', height: 'auto', minHeight: '250px', maxHeight: '500px', fontSize: '14px' },
-      modal: { width: '500px', height: 'auto', minHeight: '300px', maxHeight: '600px', fontSize: '15px' }
+      // Special dialogue sizes for combined content (text + products)
+      dialogue: { width: '550px', height: 'auto', minHeight: '400px', maxHeight: '700px', fontSize: '14px' },
+      modal: { width: '650px', height: 'auto', minHeight: '500px', maxHeight: '800px', fontSize: '15px' }
     };
     
     // Theme configurations
@@ -110,9 +110,45 @@
     const content = document.createElement('div');
     content.className = 'campaign-widget-content';
     
-    // If campaign has custom HTML/CSS from backend, use that instead
+    // If campaign has custom HTML/CSS from backend, combine it with persuasive text
     if (campaign.html && campaign.html.trim() && campaign.html !== '<div>No campaign available</div>') {
-      content.innerHTML = campaign.html;
+      console.log('BlueCreations Widget: Combining backend HTML with persuasive text');
+      
+      // Set up container with proper styling
+      content.style.cssText = `
+        height: 100%;
+        width: 100%;
+        position: relative;
+        overflow: auto;
+        background: #ffffff;
+        padding: 20px;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      `;
+      
+      // Create the combined HTML structure
+      let combinedHTML = '';
+      
+      // Add persuasive text header if available
+      if (campaign.text && campaign.text.trim()) {
+        const title = campaign.title || extractTitleFromText(campaign.text) || 'Special Recommendation';
+        combinedHTML += `
+          <div class="widget-header" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h2 style="margin: 0 0 10px 0; color: #333; font-size: 18px; font-weight: bold;">${title}</h2>
+            <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">${campaign.text}</p>
+          </div>
+        `;
+      }
+      
+      // Add the backend HTML (products)
+      combinedHTML += `
+        <div class="widget-products" style="margin-top: ${campaign.text ? '0' : '10px'};">
+          ${campaign.html}
+        </div>
+      `;
+      
+      // Set the combined HTML
+      content.innerHTML = combinedHTML;
       
       // Inject CSS if available
       if (campaign.css && campaign.css.trim()) {
@@ -124,26 +160,58 @@
       // Add close button to custom content
       const closeBtn = document.createElement('button');
       closeBtn.innerHTML = '×';
+      closeBtn.className = 'widget-close-btn';
       closeBtn.style.cssText = `
         position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(255,255,255,0.2);
+        top: 12px;
+        right: 12px;
+        background: rgba(0,0,0,0.1);
         border: none;
-        color: #333;
-        width: 20px;
-        height: 20px;
+        color: #666;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 16px;
         line-height: 1;
-        z-index: 10;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       `;
+      
+      // Add hover effects
+      closeBtn.onmouseenter = function() {
+        this.style.background = 'rgba(0,0,0,0.2)';
+        this.style.color = '#333';
+      };
+      closeBtn.onmouseleave = function() {
+        this.style.background = 'rgba(0,0,0,0.1)';
+        this.style.color = '#666';
+      };
+      
       closeBtn.onclick = function(e) {
         e.stopPropagation();
+        e.preventDefault();
         hideWidget();
       };
       content.appendChild(closeBtn);
+      
+      // Add click tracking to any buttons or links in the backend HTML
+      setTimeout(() => {
+        const buttons = content.querySelectorAll('button, a, .clickable, [onclick]');
+        buttons.forEach(button => {
+          if (!button.classList.contains('widget-close-btn')) {
+            button.addEventListener('click', (e) => {
+              const targetUrl = button.href || button.dataset.url || campaign.ctaUrl || '#';
+              console.log('BlueCreations Widget: Tracking click on:', targetUrl);
+              trackClick(targetUrl);
+            });
+          }
+        });
+      }, 100);
       
       return content;
     }

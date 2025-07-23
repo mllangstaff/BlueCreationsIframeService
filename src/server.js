@@ -15,19 +15,46 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration for iframe embedding
+// CORS configuration for iframe embedding - more permissive for development
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow all origins in development, or specific origins in production
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*'];
-    if (allowedOrigins.includes('*') || !origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    
+    // Always allow requests with no origin (like direct server requests)
+    if (!origin) {
+      return callback(null, true);
     }
+    
+    // Allow all origins if * is specified or if origin is in allowed list
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost and file:// origins for development
+    if (origin.startsWith('http://localhost') || 
+        origin.startsWith('https://localhost') || 
+        origin.startsWith('file://') ||
+        origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Cache-Control',
+    'X-Content-Type-Options'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
@@ -42,6 +69,15 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+// Handle preflight OPTIONS requests
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  res.status(200).end();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -95,10 +131,15 @@ app.get('/widget', (req, res) => {
       JSON.stringify(config)
     );
     
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'application/javascript');
+    // Set appropriate headers for CORS and iframe embedding
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.setHeader('Cache-Control', `public, max-age=${process.env.WIDGET_CACHE_TTL || 300}`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Content-Security-Policy', 'frame-ancestors *;');
     
     res.send(widgetCode);
   } catch (error) {
@@ -198,6 +239,12 @@ app.get('/campaigns/:campaignName', async (req, res) => {
     };
     
     console.log(`Campaign found: ${campaign.campaignName}, Match: ${campaign.matchReason}`);
+    
+    // Set CORS headers for API response
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
     res.json(campaign);
     
   } catch (error) {
@@ -218,6 +265,11 @@ app.get('/campaigns/:campaignName', async (req, res) => {
       text: 'Limited time offer - check it out!',
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
+    
+    // Set CORS headers for fallback response
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     
     res.json(fallbackCampaign);
   }

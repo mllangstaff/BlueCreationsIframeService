@@ -123,6 +123,12 @@
         <div class="preview-container" id="html-preview"></div>
     </div>
     
+    <div class="section" id="combined-preview-section" style="display: none;">
+        <h2>🎯 Combined Preview (Text + Products)</h2>
+        <p>This shows how the persuasive text and backend HTML will be combined in the widget:</p>
+        <div class="preview-container" id="combined-preview"></div>
+    </div>
+    
     <div class="section" id="widget-section" style="display: none;">
         <h2>🎯 Widget Preview</h2>
         <div class="preview-container" id="widget-preview"></div>
@@ -145,6 +151,33 @@
             
             // Fallback: take first 50 characters
             return text.length > 50 ? text.substring(0, 47) + '...' : text;
+        }
+        
+        // Function to create combined HTML preview
+        function createCombinedPreview(data) {
+            let combinedHTML = '';
+            
+            // Add persuasive text header if available
+            if (data.text && data.text.trim()) {
+                const title = data.title || extractTitleFromText(data.text) || 'Special Recommendation';
+                combinedHTML += `
+                    <div class="widget-header" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 18px; font-weight: bold;">${title}</h2>
+                        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">${data.text}</p>
+                    </div>
+                `;
+            }
+            
+            // Add the backend HTML (products)
+            if (data.html && data.html.trim()) {
+                combinedHTML += `
+                    <div class="widget-products" style="margin-top: ${data.text ? '0' : '10px'};">
+                        ${data.html}
+                    </div>
+                `;
+            }
+            
+            return combinedHTML;
         }
         
         function showStatus(message, isError = false) {
@@ -251,9 +284,17 @@
                     }
                     
                     showSection('preview-section');
+                    
+                    // Show combined preview (text + products)
+                    const combinedContainer = document.getElementById('combined-preview');
+                    const combinedHTML = createCombinedPreview(data);
+                    combinedContainer.innerHTML = combinedHTML;
+                    showSection('combined-preview-section');
+                    
                     showStatus(`✅ Successfully loaded campaign: ${data.campaignName || campaignName}`);
                 } else {
                     hideSection('preview-section');
+                    hideSection('combined-preview-section');
                     showStatus(`ℹ️ Campaign loaded but no custom HTML found. Using fallback content.`);
                 }
                 
@@ -289,8 +330,8 @@
             const widgetContainer = document.getElementById('widget-preview');
             widgetContainer.innerHTML = `
                 <iframe src="${iframeUrl}" 
-                        width="400" height="350" frameborder="0" 
-                        style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+                        width="550" height="450" frameborder="0" 
+                        style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); resize: both; overflow: auto;">
                 </iframe>
                 <p><strong>Widget URL:</strong> <code>${iframeUrl}</code></p>
             `;
@@ -308,6 +349,7 @@
             hideSection('html-section');
             hideSection('css-section');
             hideSection('preview-section');
+            hideSection('combined-preview-section');
             hideSection('widget-section');
             
             // Remove injected styles
