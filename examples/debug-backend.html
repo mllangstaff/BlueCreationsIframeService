@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Backend HTML/CSS Response</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .preview-container {
+            border: 2px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #f8f9ff;
+            min-height: 200px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .controls input, .controls button {
+            margin: 5px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .controls button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Backend HTML/CSS Response</h1>
+    <p>This page lets you test the HTML/CSS content returned from the BlueCreations-Backend /recommendation endpoint.</p>
+    
+    <div class="section">
+        <h2>Test Configuration</h2>
+        <div class="controls">
+            <label>Campaign Name: <input type="text" id="campaignName" value="test-campaign" placeholder="Enter campaign name"></label><br>
+            <label>User ID: <input type="text" id="userId" value="debug-user" placeholder="Enter user ID"></label><br>
+            <label>Objective: <input type="text" id="objective" value="purchase" placeholder="Enter objective"></label><br>
+            <label>Brand Name: <input type="text" id="brandName" value="TestBrand" placeholder="Enter brand name"></label><br>
+            <button onclick="fetchBackendData()">🔄 Fetch Backend Data</button>
+            <button onclick="loadWidget()">🎨 Load Widget</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+    </div>
+    
+    <div class="section" id="status-section" style="display: none;">
+        <h2>Status</h2>
+        <div id="status-message"></div>
+    </div>
+    
+    <div class="section" id="raw-response-section" style="display: none;">
+        <h2>📄 Raw Backend Response</h2>
+        <div class="code-block" id="raw-response"></div>
+    </div>
+    
+    <div class="section" id="text-section" style="display: none;">
+        <h2>💬 Persuasive Text (from 'text' field)</h2>
+        <div class="code-block" id="persuasive-text"></div>
+    </div>
+    
+    <div class="section" id="title-section" style="display: none;">
+        <h2>📝 Extracted Title</h2>
+        <div class="code-block" id="extracted-title"></div>
+    </div>
+    
+    <div class="section" id="html-section" style="display: none;">
+        <h2>🏗️ Backend Generated HTML</h2>
+        <div class="code-block" id="backend-html"></div>
+    </div>
+    
+    <div class="section" id="css-section" style="display: none;">
+        <h2>🎨 Backend Generated CSS</h2>
+        <div class="code-block" id="backend-css"></div>
+    </div>
+    
+    <div class="section" id="preview-section" style="display: none;">
+        <h2>👁️ Live Preview (Backend HTML + CSS)</h2>
+        <div class="preview-container" id="html-preview"></div>
+    </div>
+    
+    <div class="section" id="widget-section" style="display: none;">
+        <h2>🎯 Widget Preview</h2>
+        <div class="preview-container" id="widget-preview"></div>
+    </div>
+
+    <script>
+        let currentCampaignData = null;
+        
+        // Helper function to extract title from persuasive text
+        function extractTitleFromText(text) {
+            if (!text) return 'Special Offer!';
+            
+            // Split by common separators and take the first part as title
+            const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
+            if (sentences.length > 0) {
+                const title = sentences[0].trim();
+                // If it's too long, truncate it
+                return title.length > 50 ? title.substring(0, 47) + '...' : title;
+            }
+            
+            // Fallback: take first 50 characters
+            return text.length > 50 ? text.substring(0, 47) + '...' : text;
+        }
+        
+        function showStatus(message, isError = false) {
+            const statusSection = document.getElementById('status-section');
+            const statusMessage = document.getElementById('status-message');
+            statusSection.style.display = 'block';
+            statusMessage.className = isError ? 'error' : 'success';
+            statusMessage.textContent = message;
+        }
+        
+        function showSection(sectionId) {
+            document.getElementById(sectionId).style.display = 'block';
+        }
+        
+        function hideSection(sectionId) {
+            document.getElementById(sectionId).style.display = 'none';
+        }
+        
+        async function fetchBackendData() {
+            const campaignName = document.getElementById('campaignName').value;
+            const userId = document.getElementById('userId').value;
+            const objective = document.getElementById('objective').value;
+            const brandName = document.getElementById('brandName').value;
+            
+            if (!campaignName) {
+                showStatus('Campaign name is required', true);
+                return;
+            }
+            
+            try {
+                showStatus('Fetching data from backend...');
+                
+                // Build the API URL
+                const params = new URLSearchParams();
+                if (userId) params.append('userId', userId);
+                if (objective) params.append('objective', objective);
+                if (brandName) params.append('brandName', brandName);
+                
+                const url = `http://localhost:3002/campaigns/${encodeURIComponent(campaignName)}?${params.toString()}`;
+                console.log('Fetching from:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                currentCampaignData = data;
+                
+                console.log('Backend response:', data);
+                
+                // Show raw response
+                document.getElementById('raw-response').textContent = JSON.stringify(data, null, 2);
+                showSection('raw-response-section');
+                
+                // Show persuasive text if available
+                if (data.text) {
+                    document.getElementById('persuasive-text').textContent = data.text;
+                    showSection('text-section');
+                    
+                    // Show extracted title
+                    const extractedTitle = extractTitleFromText(data.text);
+                    document.getElementById('extracted-title').textContent = extractedTitle;
+                    showSection('title-section');
+                } else {
+                    hideSection('text-section');
+                    hideSection('title-section');
+                }
+                
+                // Show HTML if available
+                if (data.html) {
+                    document.getElementById('backend-html').textContent = data.html;
+                    showSection('html-section');
+                } else {
+                    hideSection('html-section');
+                }
+                
+                // Show CSS if available
+                if (data.css) {
+                    document.getElementById('backend-css').textContent = data.css;
+                    showSection('css-section');
+                } else {
+                    hideSection('css-section');
+                }
+                
+                // Show live preview if HTML is available
+                if (data.html && data.html.trim() && data.html !== '<div>No campaign available</div>') {
+                    const previewContainer = document.getElementById('html-preview');
+                    previewContainer.innerHTML = data.html;
+                    
+                    // Inject CSS if available
+                    if (data.css && data.css.trim()) {
+                        // Remove any existing debug styles for this preview
+                        const existingStyle = document.getElementById('debug-preview-styles');
+                        if (existingStyle) {
+                            existingStyle.remove();
+                        }
+                        
+                        const style = document.createElement('style');
+                        style.id = 'debug-preview-styles';
+                        style.textContent = data.css;
+                        document.head.appendChild(style);
+                    }
+                    
+                    showSection('preview-section');
+                    showStatus(`✅ Successfully loaded campaign: ${data.campaignName || campaignName}`);
+                } else {
+                    hideSection('preview-section');
+                    showStatus(`ℹ️ Campaign loaded but no custom HTML found. Using fallback content.`);
+                }
+                
+            } catch (error) {
+                console.error('Error fetching backend data:', error);
+                showStatus(`❌ Error: ${error.message}`, true);
+            }
+        }
+        
+        function loadWidget() {
+            if (!currentCampaignData) {
+                showStatus('Please fetch backend data first', true);
+                return;
+            }
+            
+            const campaignName = document.getElementById('campaignName').value;
+            const userId = document.getElementById('userId').value;
+            const objective = document.getElementById('objective').value;
+            const brandName = document.getElementById('brandName').value;
+            
+            // Build widget iframe URL
+            const params = new URLSearchParams({
+                campaignName: campaignName,
+                userId: userId || '',
+                contentType: 'dialogue',
+                size: 'dialogue',
+                objective: objective || '',
+                brandName: brandName || ''
+            });
+            
+            const iframeUrl = `http://localhost:3002/widget?${params.toString()}`;
+            
+            const widgetContainer = document.getElementById('widget-preview');
+            widgetContainer.innerHTML = `
+                <iframe src="${iframeUrl}" 
+                        width="400" height="350" frameborder="0" 
+                        style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+                </iframe>
+                <p><strong>Widget URL:</strong> <code>${iframeUrl}</code></p>
+            `;
+            
+            showSection('widget-section');
+            showStatus('✅ Widget loaded');
+        }
+        
+        function clearResults() {
+            currentCampaignData = null;
+            hideSection('status-section');
+            hideSection('raw-response-section');
+            hideSection('text-section');
+            hideSection('title-section');
+            hideSection('html-section');
+            hideSection('css-section');
+            hideSection('preview-section');
+            hideSection('widget-section');
+            
+            // Remove injected styles
+            const existingStyle = document.getElementById('debug-preview-styles');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+        }
+        
+        // Auto-load on page load for quick testing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Uncomment the line below to auto-fetch on page load
+            // fetchBackendData();
+        });
+    </script>
+</body>
+</html>

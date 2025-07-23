@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Integration - Campaign Widget Service</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .content {
+            padding: 40px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .demo-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .demo-card h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .widget-controls {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 15px 0;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .analytics-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        #widget-preview {
+            min-height: 300px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9ff;
+            position: relative;
+        }
+        .code-output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .status-loading { background: #ffc107; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Advanced Widget Integration</h1>
+            <p>Interactive demo with real-time configuration, analytics, and testing</p>
+        </div>
+        
+        <div class="content">
+            <!-- Service Status -->
+            <div class="analytics-panel">
+                <h3>🔌 Service Status</h3>
+                <p>
+                    <span class="status-indicator status-loading" id="status-indicator"></span>
+                    <span id="status-text">Checking service...</span>
+                </p>
+                <p><strong>Endpoint:</strong> <code id="service-endpoint">http://localhost:3002</code></p>
+            </div>
+            
+            <!-- Widget Builder -->
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3>🛠️ Widget Builder</h3>
+                    <div class="widget-controls">
+                        <div class="control-group">
+                            <label for="campaignId">Campaign ID:</label>
+                            <input type="text" id="campaignId" value="live-demo-123" placeholder="Enter campaign ID">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="userId">User ID:</label>
+                            <input type="text" id="userId" value="demo-user-456" placeholder="Enter user ID">
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="widgetSize">Size:</label>
+                            <select id="widgetSize">
+                                <option value="small">Small (200x150)</option>
+                                <option value="medium" selected>Medium (300x200)</option>
+                                <option value="large">Large (400x250)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="widgetTheme">Theme:</label>
+                            <select id="widgetTheme">
+                                <option value="light" selected>Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="widgetPosition">Position:</label>
+                            <select id="widgetPosition">
+                                <option value="top-left">Top Left</option>
+                                <option value="top-right" selected>Top Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                                <option value="bottom-right">Bottom Right</option>
+                                <option value="center">Center</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn" onclick="generateWidget()">🔄 Generate Widget</button>
+                        <button class="btn btn-secondary" onclick="clearPreview()">🗑️ Clear</button>
+                    </div>
+                </div>
+                
+                <div class="demo-card">
+                    <h3>📱 Live Preview</h3>
+                    <div id="widget-preview">
+                        <p style="color: #6c757d; text-align: center;">
+                            Configure your widget settings and click "Generate Widget" to see a live preview
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generated Code -->
+            <div class="demo-card">
+                <h3>💻 Generated Code</h3>
+                <p>Copy and paste this code into your website:</p>
+                
+                <h4>HTML (iframe method):</h4>
+                <div class="code-output" id="html-code">
+                    Configure a widget above to generate code
+                </div>
+                
+                <h4>JavaScript (dynamic method):</h4>
+                <div class="code-output" id="js-code">
+                    Configure a widget above to generate code
+                </div>
+                
+                <button class="btn" onclick="copyToClipboard('html-code')">📋 Copy HTML</button>
+                <button class="btn btn-secondary" onclick="copyToClipboard('js-code')">📋 Copy JS</button>
+            </div>
+            
+            <!-- Analytics Dashboard -->
+            <div class="analytics-panel">
+                <h3>📊 Widget Analytics (Demo)</h3>
+                <p>Real-time metrics for your campaign widgets</p>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="impressions-count">0</div>
+                        <div class="metric-label">Impressions</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="clicks-count">0</div>
+                        <div class="metric-label">Clicks</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="ctr-rate">0%</div>
+                        <div class="metric-label">CTR</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="active-widgets">0</div>
+                        <div class="metric-label">Active Widgets</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced Features -->
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3>🎯 A/B Testing</h3>
+                    <p>Test different widget configurations:</p>
+                    <button class="btn" onclick="runABTest()">🧪 Start A/B Test</button>
+                    <div id="ab-test-results" style="margin-top: 15px; display: none;">
+                        <p><strong>Variant A:</strong> Light theme, medium size</p>
+                        <p><strong>Variant B:</strong> Dark theme, large size</p>
+                        <p><strong>Winner:</strong> <span id="ab-winner">Testing...</span></p>
+                    </div>
+                </div>
+                
+                <div class="demo-card">
+                    <h3>⚡ Performance Testing</h3>
+                    <p>Test widget loading performance:</p>
+                    <button class="btn" onclick="runPerformanceTest()">⏱️ Run Performance Test</button>
+                    <div id="performance-results" style="margin-top: 15px; display: none;">
+                        <p><strong>Load Time:</strong> <span id="load-time">-</span></p>
+                        <p><strong>Render Time:</strong> <span id="render-time">-</span></p>
+                        <p><strong>Status:</strong> <span id="perf-status">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo state
+        let demoMetrics = {
+            impressions: 0,
+            clicks: 0,
+            activeWidgets: 0
+        };
+        
+        // Check service status
+        async function checkServiceStatus() {
+            try {
+                const response = await fetch('http://localhost:3002/health');
+                if (response.ok) {
+                    document.getElementById('status-indicator').className = 'status-indicator status-online';
+                    document.getElementById('status-text').textContent = 'Service Online';
+                } else {
+                    throw new Error('Service unavailable');
+                }
+            } catch (error) {
+                document.getElementById('status-indicator').className = 'status-indicator status-offline';
+                document.getElementById('status-text').textContent = 'Service Offline - Start the server first';
+            }
+        }
+        
+        // Generate widget
+        function generateWidget() {
+            const config = {
+                campaignId: document.getElementById('campaignId').value || 'demo-123',
+                userId: document.getElementById('userId').value || 'demo-user',
+                size: document.getElementById('widgetSize').value,
+                theme: document.getElementById('widgetTheme').value,
+                position: document.getElementById('widgetPosition').value
+            };
+            
+            // Clear preview
+            const preview = document.getElementById('widget-preview');
+            preview.innerHTML = '';
+            
+            // Create iframe
+            const iframe = document.createElement('iframe');
+            const params = new URLSearchParams(config);
+            iframe.src = `http://localhost:3002/widget?${params.toString()}`;
+            
+            // Set dimensions based on size
+            const dimensions = {
+                small: { width: 200, height: 150 },
+                medium: { width: 300, height: 200 },
+                large: { width: 400, height: 250 }
+            };
+            
+            const size = dimensions[config.size];
+            iframe.width = size.width;
+            iframe.height = size.height;
+            iframe.frameBorder = '0';
+            iframe.style.borderRadius = '8px';
+            iframe.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            
+            preview.appendChild(iframe);
+            
+            // Update metrics
+            demoMetrics.activeWidgets++;
+            demoMetrics.impressions++;
+            updateMetrics();
+            
+            // Generate code samples
+            generateCode(config, size);
+        }
+        
+        // Generate code samples
+        function generateCode(config, size) {
+            const params = new URLSearchParams(config);
+            const widgetUrl = `http://localhost:3002/widget?${params.toString()}`;
+            
+            // HTML code
+            const htmlCode = `<iframe src="${widgetUrl}" 
+       width="${size.width}" height="${size.height}" 
+       frameborder="0">
+</iframe>`;
+            
+            // JavaScript code
+            const jsCode = `function loadCampaignWidget() {
+    const iframe = document.createElement('iframe');
+    iframe.src = '${widgetUrl}';
+    iframe.width = '${size.width}';
+    iframe.height = '${size.height}';
+    iframe.frameBorder = '0';
+    document.getElementById('widget-container').appendChild(iframe);
+}
+
+// Load widget when page is ready
+document.addEventListener('DOMContentLoaded', loadCampaignWidget);`;
+            
+            document.getElementById('html-code').textContent = htmlCode;
+            document.getElementById('js-code').textContent = jsCode;
+        }
+        
+        // Clear preview
+        function clearPreview() {
+            document.getElementById('widget-preview').innerHTML = `
+                <p style="color: #6c757d; text-align: center;">
+                    Configure your widget settings and click "Generate Widget" to see a live preview
+                </p>
+            `;
+            demoMetrics.activeWidgets = Math.max(0, demoMetrics.activeWidgets - 1);
+            updateMetrics();
+        }
+        
+        // Copy to clipboard
+        async function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Code copied to clipboard!');
+            } catch (error) {
+                console.error('Failed to copy to clipboard:', error);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Code copied to clipboard!');
+            }
+        }
+        
+        // A/B Testing simulation
+        function runABTest() {
+            const resultsDiv = document.getElementById('ab-test-results');
+            const winnerSpan = document.getElementById('ab-winner');
+            
+            resultsDiv.style.display = 'block';
+            winnerSpan.textContent = 'Testing...';
+            
+            // Simulate A/B test
+            setTimeout(() => {
+                const winner = Math.random() > 0.5 ? 'Variant A (better CTR)' : 'Variant B (better engagement)';
+                winnerSpan.textContent = winner;
+                demoMetrics.clicks += 5;
+                updateMetrics();
+            }, 2000);
+        }
+        
+        // Performance testing simulation
+        function runPerformanceTest() {
+            const resultsDiv = document.getElementById('performance-results');
+            const loadTimeSpan = document.getElementById('load-time');
+            const renderTimeSpan = document.getElementById('render-time');
+            const statusSpan = document.getElementById('perf-status');
+            
+            resultsDiv.style.display = 'block';
+            loadTimeSpan.textContent = 'Testing...';
+            renderTimeSpan.textContent = 'Testing...';
+            statusSpan.textContent = 'Running...';
+            
+            // Simulate performance test
+            setTimeout(() => {
+                const loadTime = (Math.random() * 500 + 100).toFixed(0);
+                const renderTime = (Math.random() * 200 + 50).toFixed(0);
+                
+                loadTimeSpan.textContent = `${loadTime}ms`;
+                renderTimeSpan.textContent = `${renderTime}ms`;
+                statusSpan.textContent = loadTime < 300 ? '✅ Excellent' : loadTime < 600 ? '⚠️ Good' : '❌ Needs Optimization';
+            }, 2000);
+        }
+        
+        // Update metrics display
+        function updateMetrics() {
+            document.getElementById('impressions-count').textContent = demoMetrics.impressions;
+            document.getElementById('clicks-count').textContent = demoMetrics.clicks;
+            document.getElementById('active-widgets').textContent = demoMetrics.activeWidgets;
+            
+            const ctr = demoMetrics.impressions > 0 ? 
+                ((demoMetrics.clicks / demoMetrics.impressions) * 100).toFixed(1) : 0;
+            document.getElementById('ctr-rate').textContent = `${ctr}%`;
+        }
+        
+        // Simulate some activity
+        function simulateActivity() {
+            if (Math.random() > 0.7) {
+                demoMetrics.impressions++;
+                if (Math.random() > 0.8) {
+                    demoMetrics.clicks++;
+                }
+                updateMetrics();
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServiceStatus();
+            updateMetrics();
+            
+            // Simulate periodic activity
+            setInterval(simulateActivity, 3000);
+        });
+    </script>
+</body>
+</html>

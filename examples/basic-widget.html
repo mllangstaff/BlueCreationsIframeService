@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Widget Demo - Campaign Widget Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .iframe-container {
+            border: 2px dashed #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #f8f9ff;
+        }
+        h1, h2 { color: #333; }
+        p { color: #666; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <h1>Campaign Widget Service - Demo</h1>
+    <p>This page demonstrates different ways to embed campaign widgets using the Campaign Widget Service.</p>
+    
+    <div class="demo-section">
+        <h2>1. Basic Widget (Medium Size, Light Theme)</h2>
+        <p>The simplest implementation with default settings.</p>
+        
+        <div class="code-block">
+            <strong>HTML:</strong><br>
+            <code>&lt;iframe src="http://localhost:3002/widget?campaignName=demo-campaign&userId=user-456" 
+                   width="350" height="250" frameborder="0" style="border-radius: 12px;"&gt;&lt;/iframe&gt;</code>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/widget?campaignName=demo-campaign&userId=user-456" 
+                    width="350" height="250" frameborder="0" style="border-radius: 12px;">
+            </iframe>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>2. Small Widget (Top-Right Position)</h2>
+        <p>Smaller widget perfect for corner placement.</p>
+        
+        <div class="code-block">
+            <strong>HTML:</strong><br>
+            <code>&lt;iframe src="http://localhost:3002/widget?campaignId=demo-456&userId=user-789&size=small&position=top-right" 
+                   width="200" height="150" frameborder="0"&gt;&lt;/iframe&gt;</code>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/widget?campaignId=demo-456&userId=user-789&size=small&position=top-right" 
+                    width="200" height="150" frameborder="0">
+            </iframe>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>3. Large Widget (Dark Theme)</h2>
+        <p>Large widget with dark theme for better visibility on light backgrounds.</p>
+        
+        <div class="code-block">
+            <strong>HTML:</strong><br>
+            <code>&lt;iframe src="http://localhost:3002/widget?campaignName=demo-large&userId=user-123&size=large&theme=dark" 
+                   width="450" height="320" frameborder="0" style="border-radius: 12px;"&gt;&lt;/iframe&gt;</code>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/widget?campaignName=demo-large&userId=user-123&size=large&theme=dark" 
+                    width="450" height="320" frameborder="0" style="border-radius: 12px;">
+            </iframe>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>4. Dialogue Widget (Backend HTML)</h2>
+        <p>Dialogue widget that displays custom HTML content from the backend recommendation API.</p>
+        
+        <div class="code-block">
+            <strong>HTML:</strong><br>
+            <code>&lt;iframe src="http://localhost:3002/widget?campaignName=dialogue-demo&userId=user-456&contentType=dialogue&size=dialogue" 
+                   width="400" height="350" frameborder="0" style="border-radius: 12px; resize: both; overflow: auto;"&gt;&lt;/iframe&gt;</code>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/widget?campaignName=dialogue-demo&userId=user-456&contentType=dialogue&size=dialogue" 
+                    width="400" height="350" frameborder="0" style="border-radius: 12px; resize: both; overflow: auto;">
+            </iframe>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>5. Modal Widget (Full Backend Control)</h2>
+        <p>Modal widget with larger dimensions for complex recommendation content.</p>
+        
+        <div class="code-block">
+            <strong>HTML:</strong><br>
+            <code>&lt;iframe src="http://localhost:3002/widget?campaignName=modal-demo&userId=user-789&contentType=modal&size=modal&objective=purchase" 
+                   width="500" height="400" frameborder="0" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);"&gt;&lt;/iframe&gt;</code>
+        </div>
+        
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/widget?campaignName=modal-demo&userId=user-789&contentType=modal&size=modal&objective=purchase" 
+                    width="500" height="400" frameborder="0" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+            </iframe>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>4. Dynamic Widget Loading with JavaScript</h2>
+        <p>Load widgets dynamically based on user behavior or conditions.</p>
+        
+        <div class="code-block">
+            <strong>JavaScript:</strong><br>
+            <code>
+function loadWidget(containerId, config) {<br>
+&nbsp;&nbsp;const iframe = document.createElement('iframe');<br>
+&nbsp;&nbsp;const params = new URLSearchParams(config);<br>
+&nbsp;&nbsp;iframe.src = `http://localhost:3002/widget?${params.toString()}`;<br>
+&nbsp;&nbsp;iframe.width = config.width || '300';<br>
+&nbsp;&nbsp;iframe.height = config.height || '200';<br>
+&nbsp;&nbsp;iframe.frameBorder = '0';<br>
+&nbsp;&nbsp;document.getElementById(containerId).appendChild(iframe);<br>
+}
+            </code>
+        </div>
+        
+        <button onclick="loadDynamicWidget()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+            Load Dynamic Widget
+        </button>
+        
+        <div id="dynamic-widget-container" class="iframe-container" style="min-height: 200px;">
+            <p style="text-align: center; color: #666;">Click the button above to load a widget dynamically</p>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Widget Configuration Options</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Parameter</th>
+                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Options</th>
+                    <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>campaignName</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Any string</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Campaign name for backend API lookup</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>userId</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Any string</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">User identifier for personalization</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>size</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">small, medium, large, dialogue, modal</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Widget dimensions and layout type</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>contentType</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">widget, dialogue, modal</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Content presentation style</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>theme</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">light, dark</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Visual theme</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>objective</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Any string</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">User objective for recommendation targeting</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>brandName</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Any string</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Brand context for recommendations</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;"><code>position</code></td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">top-left, top-right, bottom-left, bottom-right, center</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">Widget placement (for overlay widgets)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function loadDynamicWidget() {
+            const container = document.getElementById('dynamic-widget-container');
+            container.innerHTML = '';
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = 'http://localhost:3002/widget?campaignId=dynamic-' + Date.now() + '&userId=dynamic-user&size=medium&theme=light';
+            iframe.width = '300';
+            iframe.height = '200';
+            iframe.frameBorder = '0';
+            iframe.style.display = 'block';
+            iframe.style.margin = '0 auto';
+            
+            container.appendChild(iframe);
+        }
+        
+        // Example of conditional widget loading
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate user behavior tracking
+            let scrollDepth = 0;
+            
+            window.addEventListener('scroll', function() {
+                const currentScroll = window.pageYOffset;
+                const docHeight = document.body.offsetHeight - window.innerHeight;
+                scrollDepth = Math.max(scrollDepth, currentScroll / docHeight);
+                
+                // Load engagement widget if user scrolls past 50%
+                if (scrollDepth > 0.5 && !document.getElementById('engagement-widget')) {
+                    console.log('User engaged - could load targeted widget here');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
